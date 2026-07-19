@@ -2815,7 +2815,8 @@ PLAYABLE_MOMENT_POOL = [
 
 
 def initialise_playable_final():
-        selected_moments = random.sample(
+        
+    selected_moments = random.sample(
         PLAYABLE_MOMENT_POOL,
         k=min(5, len(PLAYABLE_MOMENT_POOL))
     )
