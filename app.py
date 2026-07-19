@@ -2927,8 +2927,8 @@ success_probability = (
     success_probability * 1.18
     + 0.04
 )
-# Active What-Ifs affect the decision.
-if moment["team"] == "Argentina":
+    # Active What-Ifs affect the decision.
+    if moment["team"] == "Argentina":
 
         if messi_status == "Limited fitness":
             success_probability *= 0.92
@@ -2942,7 +2942,7 @@ if moment["team"] == "Argentina":
         if argentina_red_card:
             success_probability *= 0.75
 
-else:
+    else:
 
         if yamal_status == "Limited fitness":
             success_probability *= 0.93
