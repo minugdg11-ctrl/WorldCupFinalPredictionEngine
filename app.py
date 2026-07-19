@@ -1051,7 +1051,36 @@ else:
         "All match probabilities, expected goals, score predictions and player "
         "probabilities on every tab have been recalculated."
     )
+st.markdown("""
+## Getting Started
 
+Welcome to the **2026 FIFA World Cup Final Prediction Engine**, an interactive platform that combines statistical modelling, scenario analysis and live match simulation to explore how the FIFA World Cup Final could unfold.
+
+### 1. Play the Final (Recommended)
+Start with **Play the Final** to experience an interactive version of the World Cup Final. Throughout the match you'll face major tactical moments where your decisions directly influence the game's outcome. Every choice updates the live probabilities and can ultimately decide who lifts the World Cup.
+
+### 2. View the Baseline Prediction
+Open the **Match Prediction** tab to explore the model's baseline forecast, including the projected winner, scoreline, expected goals (xG), win probabilities and other key statistical insights.
+
+### 3. Build Your Own Scenario
+Use the controls in the **left sidebar** to modify player fitness, match events and other pre-match conditions. Every adjustment instantly recalculates the model, allowing you to compare how different scenarios influence the prediction.
+
+### 4. Explore the Analysis
+Navigate through the tabs below to investigate different aspects of the model:
+
+- **Play the Final** – Play through an interactive version of the Final where your decisions shape the result.
+- **Match Prediction** – View the model's complete statistical prediction.
+- **Automatic Simulator** – Run a full AI simulation of the Final from kick-off to full-time.
+- **Player Probabilities** – Explore projected goals, assists and performance probabilities for key players.
+- **Match Events** – Analyse the likelihood of significant events occurring throughout the match.
+- **Methodology** – Learn about the data, assumptions and statistical techniques used to build the prediction engine.
+
+### Recommended Experience
+
+For the best experience, begin by playing the interactive Final. Afterwards, compare your result with the model's prediction, experiment with different scenarios using the sidebar, and observe how each change affects the projected outcome across every section of the platform.
+
+---
+""")
 with st.container(border=True):
     st.subheader("Current scenario")
 
