@@ -2,39 +2,13 @@ import streamlit as st
 from scipy.stats import poisson
 import math
 import random
-import base64
-def get_base64_image(image_path):
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode()
 
-background_image = get_base64_image("assets/background.png")
 st.set_page_config(
     page_title="World Cup Simulation Engine",
     page_icon="⚽",
     layout="wide"
 )
-st.markdown(
-    f"""
-    <style>
 
-    .stApp {{
-        background-image:
-            linear-gradient(
-                rgba(15,15,15,0.94),
-                rgba(15,15,15,0.94)
-            ),
-            url("data:image/png;base64,{background_image}");
-
-        background-size: 70%;
-        background-repeat: no-repeat;
-        background-position: center;
-        background-attachment: fixed;
-    }}
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
 # ⬇️ PASTE THE TEAM_DATA HERE
 
 TEAM_DATA = {
@@ -2635,7 +2609,7 @@ st.write(
 # GAME SETUP
 # --------------------------------------------------
 
-PLAYABLE_MOMENT_POOL = [
+PLAYABLE_MOMENTS = [
     {
         "minute": 12,
         "title": "Messi receives the ball outside the penalty area.",
@@ -2815,17 +2789,6 @@ PLAYABLE_MOMENT_POOL = [
 
 
 def initialise_playable_final():
-        
-    selected_moments = random.sample(
-        PLAYABLE_MOMENT_POOL,
-        k=min(5, len(PLAYABLE_MOMENT_POOL))
-    )
-
-    selected_moments.sort(
-        key=lambda moment: moment["minute"]
-    )
-
-    st.session_state.play_final_moments = selected_moments
     st.session_state.play_final_active = True
     st.session_state.play_final_moment = 0
     st.session_state.play_final_argentina_goals = 0
@@ -2841,10 +2804,10 @@ def initialise_playable_final():
 def calculate_live_probabilities():
     current_index = st.session_state.play_final_moment
 
-    if current_index >= len(st.session_state.play_final_moments):
+    if current_index >= len(PLAYABLE_MOMENTS):
         current_minute = 90
     else:
-        current_minute = st.session_state.play_final_moments[current_index]["minute"]
+        current_minute = PLAYABLE_MOMENTS[current_index]["minute"]
 
     remaining_fraction = max(
         0.02,
@@ -2917,7 +2880,7 @@ def calculate_live_probabilities():
 
 def resolve_playable_choice(choice_name):
     moment_index = st.session_state.play_final_moment
-    moment = st.session_state.play_final_moments[moment_index]
+    moment = PLAYABLE_MOMENTS[moment_index]
     choice = moment["choices"][choice_name]
 
     success_probability = choice["success"]
@@ -2974,8 +2937,6 @@ success_probability = (
             choice["xg_change"]
         )
 
-        choice_lower = choice_name.lower()
-
     if event_succeeds:
 
         if moment["team"] == "Argentina":
@@ -2983,83 +2944,10 @@ success_probability = (
         else:
             st.session_state.play_final_spain_goals += 1
 
-        if "shoot" in choice_lower:
-            explanation = (
-                "The attacker created enough space and executed the shot "
-                "before the defence could close them down."
-            )
-
-        elif (
-            "pass" in choice_lower
-            or "cross" in choice_lower
-            or "through ball" in choice_lower
-        ):
-            explanation = (
-                "The timing and accuracy of the delivery disrupted the "
-                "defensive structure and created a high-quality opportunity."
-            )
-
-        elif (
-            "possession" in choice_lower
-            or "patient" in choice_lower
-            or "wait" in choice_lower
-            or "slow" in choice_lower
-            or "recycle" in choice_lower
-        ):
-            explanation = (
-                "The team remained composed, retained control and waited "
-                "until a safer opening became available."
-            )
-
-        else:
-            explanation = (
-                "The decision was executed effectively and the opposition "
-                "could not respond quickly enough."
-            )
-
-        outcome_text = (
-            f"{choice['success_text']} {explanation}"
-        )
+        outcome_text = choice["success_text"]
 
     else:
-
-        if "shoot" in choice_lower:
-            explanation = (
-                "The attempt was made under pressure, allowing the goalkeeper "
-                "or nearby defenders to deal with the danger."
-            )
-
-        elif (
-            "pass" in choice_lower
-            or "cross" in choice_lower
-            or "through ball" in choice_lower
-        ):
-            explanation = (
-                "The defence anticipated the delivery and protected the most "
-                "dangerous space before the chance could develop."
-            )
-
-        elif (
-            "possession" in choice_lower
-            or "patient" in choice_lower
-            or "wait" in choice_lower
-            or "slow" in choice_lower
-            or "recycle" in choice_lower
-        ):
-            explanation = (
-                "The cautious approach reduced the immediate risk, but the "
-                "attack lost momentum before a clear chance was created."
-            )
-
-        else:
-            explanation = (
-                "The opposition reacted well and prevented the decision from "
-                "producing the intended outcome."
-            )
-
-        outcome_text = (
-            f"{choice['failure_text']} {explanation}"
-        )
+        outcome_text = choice["failure_text"]
 
     st.session_state.play_final_history.append(
         {
@@ -3075,7 +2963,7 @@ success_probability = (
 
     if (
         st.session_state.play_final_moment
-        >= len(st.session_state.play_final_moments)
+        >= len(PLAYABLE_MOMENTS)
     ):
         finish_playable_final()
 
@@ -3262,7 +3150,7 @@ with play_tab:
         with landing_col1:
             st.metric(
                 "Major decisions",
-                len(st.session_state.play_final_moments)
+                len(PLAYABLE_MOMENTS)
             )
 
         with landing_col2:
@@ -3389,9 +3277,9 @@ with play_tab:
             st.session_state.play_final_moment
         )
 
-        if current_index < len(st.session_state.play_final_moments):
+        if current_index < len(PLAYABLE_MOMENTS):
             displayed_minute = (
-                st.session_state.play_final_moments[current_index]["minute"]
+                PLAYABLE_MOMENTS[current_index]["minute"]
             )
         else:
             displayed_minute = 90
@@ -3462,7 +3350,7 @@ with play_tab:
 
         if not st.session_state.play_final_finished:
 
-            moment = st.session_state.play_final_moments[
+            moment = PLAYABLE_MOMENTS[
                 st.session_state.play_final_moment
             ]
 
