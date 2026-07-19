@@ -2,13 +2,39 @@ import streamlit as st
 from scipy.stats import poisson
 import math
 import random
+import base64
+def get_base64_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode()
 
+background_image = get_base64_image("assets/background.png")
 st.set_page_config(
-    page_title="World Cup Prediction Engine",
+    page_title="World Cup Simulation Engine",
     page_icon="⚽",
     layout="wide"
 )
+st.markdown(
+    f"""
+    <style>
 
+    .stApp {{
+        background-image:
+            linear-gradient(
+                rgba(15,15,15,0.94),
+                rgba(15,15,15,0.94)
+            ),
+            url("data:image/png;base64,{background_image}");
+
+        background-size: 70%;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 # ⬇️ PASTE THE TEAM_DATA HERE
 
 TEAM_DATA = {
@@ -172,7 +198,7 @@ def smoothed_event_rate(
 def clamp(value, minimum, maximum):
     return max(minimum, min(maximum, value))
 
-st.title("⚽ World Cup Prediction Engine")
+st.title("⚽ World Cup Simulation Engine")
 
 st.subheader("Version 0.1")
 
@@ -1030,10 +1056,10 @@ penalty_goal_probability = (
 
 active_scenario_count = len(scenario_notes)
 
-st.title("2026 World Cup Final Prediction Model")
+st.title("2026 World Cup Final Simulation Model")
 
 st.caption(
-    "Argentina vs Spain | Statistical prediction and interactive scenario analysis"
+    "Argentina vs Spain | Statistical Simulation and interactive scenario analysis"
 )
 
 # --------------------------------------------------
@@ -1054,7 +1080,7 @@ else:
 st.markdown("""
 ## Getting Started
 
-Welcome to the **2026 FIFA World Cup Final Prediction Engine**, an interactive platform that combines statistical modelling, scenario analysis and live match simulation to explore how the FIFA World Cup Final could unfold.
+Welcome to the **2026 FIFA World Cup Final Simulation Engine**, an interactive platform that combines statistical modelling, scenario analysis and live match simulation to explore how the FIFA World Cup Final could unfold.
 
 ### 1. Play the Final (Recommended)
 Start with **Play the Final** to experience an interactive version of the World Cup Final. Throughout the match you'll face major tactical moments where your decisions directly influence the game's outcome. Every choice updates the live probabilities and can ultimately decide who lifts the World Cup.
@@ -1073,7 +1099,7 @@ Navigate through the tabs below to investigate different aspects of the model:
 - **Automatic Simulator** – Run a full AI simulation of the Final from kick-off to full-time.
 - **Player Probabilities** – Explore projected goals, assists and performance probabilities for key players.
 - **Match Events** – Analyse the likelihood of significant events occurring throughout the match.
-- **Methodology** – Learn about the data, assumptions and statistical techniques used to build the prediction engine.
+- **Methodology** – Learn about the data, assumptions and statistical techniques used to build the simulation engine.
 
 ### Recommended Experience
 
@@ -2609,7 +2635,7 @@ st.write(
 # GAME SETUP
 # --------------------------------------------------
 
-PLAYABLE_MOMENTS = [
+PLAYABLE_MOMENT_POOL = [
     {
         "minute": 12,
         "title": "Messi receives the ball outside the penalty area.",
@@ -2789,6 +2815,16 @@ PLAYABLE_MOMENTS = [
 
 
 def initialise_playable_final():
+        selected_moments = random.sample(
+        PLAYABLE_MOMENT_POOL,
+        k=min(5, len(PLAYABLE_MOMENT_POOL))
+    )
+
+    selected_moments.sort(
+        key=lambda moment: moment["minute"]
+    )
+
+    st.session_state.play_final_moments = selected_moments
     st.session_state.play_final_active = True
     st.session_state.play_final_moment = 0
     st.session_state.play_final_argentina_goals = 0
@@ -2804,10 +2840,10 @@ def initialise_playable_final():
 def calculate_live_probabilities():
     current_index = st.session_state.play_final_moment
 
-    if current_index >= len(PLAYABLE_MOMENTS):
+    if current_index >= len(st.session_state.play_final_moments):
         current_minute = 90
     else:
-        current_minute = PLAYABLE_MOMENTS[current_index]["minute"]
+        current_minute = st.session_state.play_final_moments[current_index]["minute"]
 
     remaining_fraction = max(
         0.02,
@@ -2880,11 +2916,16 @@ def calculate_live_probabilities():
 
 def resolve_playable_choice(choice_name):
     moment_index = st.session_state.play_final_moment
-    moment = PLAYABLE_MOMENTS[moment_index]
+    moment = st.session_state.play_final_moments[moment_index]
     choice = moment["choices"][choice_name]
 
     success_probability = choice["success"]
-
+# Slightly increase success rates so the playable mode feels
+# more rewarding while keeping outcomes uncertain.
+success_probability = (
+    success_probability * 1.18
+    + 0.04
+)
     # Active What-Ifs affect the decision.
     if moment["team"] == "Argentina":
 
@@ -2915,8 +2956,8 @@ def resolve_playable_choice(choice_name):
             success_probability *= 0.75
 
     success_probability = max(
-        0.03,
-        min(0.75, success_probability)
+        0.05,
+        min(0.82, success_probability)
     )
 
     event_succeeds = (
@@ -2932,6 +2973,8 @@ def resolve_playable_choice(choice_name):
             choice["xg_change"]
         )
 
+        choice_lower = choice_name.lower()
+
     if event_succeeds:
 
         if moment["team"] == "Argentina":
@@ -2939,10 +2982,83 @@ def resolve_playable_choice(choice_name):
         else:
             st.session_state.play_final_spain_goals += 1
 
-        outcome_text = choice["success_text"]
+        if "shoot" in choice_lower:
+            explanation = (
+                "The attacker created enough space and executed the shot "
+                "before the defence could close them down."
+            )
+
+        elif (
+            "pass" in choice_lower
+            or "cross" in choice_lower
+            or "through ball" in choice_lower
+        ):
+            explanation = (
+                "The timing and accuracy of the delivery disrupted the "
+                "defensive structure and created a high-quality opportunity."
+            )
+
+        elif (
+            "possession" in choice_lower
+            or "patient" in choice_lower
+            or "wait" in choice_lower
+            or "slow" in choice_lower
+            or "recycle" in choice_lower
+        ):
+            explanation = (
+                "The team remained composed, retained control and waited "
+                "until a safer opening became available."
+            )
+
+        else:
+            explanation = (
+                "The decision was executed effectively and the opposition "
+                "could not respond quickly enough."
+            )
+
+        outcome_text = (
+            f"{choice['success_text']} {explanation}"
+        )
 
     else:
-        outcome_text = choice["failure_text"]
+
+        if "shoot" in choice_lower:
+            explanation = (
+                "The attempt was made under pressure, allowing the goalkeeper "
+                "or nearby defenders to deal with the danger."
+            )
+
+        elif (
+            "pass" in choice_lower
+            or "cross" in choice_lower
+            or "through ball" in choice_lower
+        ):
+            explanation = (
+                "The defence anticipated the delivery and protected the most "
+                "dangerous space before the chance could develop."
+            )
+
+        elif (
+            "possession" in choice_lower
+            or "patient" in choice_lower
+            or "wait" in choice_lower
+            or "slow" in choice_lower
+            or "recycle" in choice_lower
+        ):
+            explanation = (
+                "The cautious approach reduced the immediate risk, but the "
+                "attack lost momentum before a clear chance was created."
+            )
+
+        else:
+            explanation = (
+                "The opposition reacted well and prevented the decision from "
+                "producing the intended outcome."
+            )
+
+        outcome_text = (
+            f"{choice['failure_text']} {explanation}"
+        )
 
     st.session_state.play_final_history.append(
         {
@@ -2958,7 +3074,7 @@ def resolve_playable_choice(choice_name):
 
     if (
         st.session_state.play_final_moment
-        >= len(PLAYABLE_MOMENTS)
+        >= len(st.session_state.play_final_moments)
     ):
         finish_playable_final()
 
@@ -3145,7 +3261,7 @@ with play_tab:
         with landing_col1:
             st.metric(
                 "Major decisions",
-                len(PLAYABLE_MOMENTS)
+                len(st.session_state.play_final_moments)
             )
 
         with landing_col2:
@@ -3272,9 +3388,9 @@ with play_tab:
             st.session_state.play_final_moment
         )
 
-        if current_index < len(PLAYABLE_MOMENTS):
+        if current_index < len(st.session_state.play_final_moments):
             displayed_minute = (
-                PLAYABLE_MOMENTS[current_index]["minute"]
+                st.session_state.play_final_moments[current_index]["minute"]
             )
         else:
             displayed_minute = 90
@@ -3345,7 +3461,7 @@ with play_tab:
 
         if not st.session_state.play_final_finished:
 
-            moment = PLAYABLE_MOMENTS[
+            moment = st.session_state.play_final_moments[
                 st.session_state.play_final_moment
             ]
 
