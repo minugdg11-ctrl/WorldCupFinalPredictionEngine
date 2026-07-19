@@ -4,7 +4,7 @@ import math
 import random
 
 st.set_page_config(
-    page_title="World Cup Simulation Engine",
+    page_title="World Cup Prediction Engine",
     page_icon="⚽",
     layout="wide"
 )
@@ -172,7 +172,7 @@ def smoothed_event_rate(
 def clamp(value, minimum, maximum):
     return max(minimum, min(maximum, value))
 
-st.title("⚽ World Cup Simulation Engine")
+st.title("⚽ World Cup Prediction Engine")
 
 st.subheader("Version 0.1")
 
@@ -1030,10 +1030,10 @@ penalty_goal_probability = (
 
 active_scenario_count = len(scenario_notes)
 
-st.title("2026 World Cup Final Simulation Model")
+st.title("2026 World Cup Final Prediction Model")
 
 st.caption(
-    "Argentina vs Spain | Statistical Simulation and interactive scenario analysis"
+    "Argentina vs Spain | Statistical prediction and interactive scenario analysis"
 )
 
 # --------------------------------------------------
@@ -1051,36 +1051,7 @@ else:
         "All match probabilities, expected goals, score predictions and player "
         "probabilities on every tab have been recalculated."
     )
-st.markdown("""
-## Getting Started
 
-Welcome to the **2026 FIFA World Cup Final Simulation Engine**, an interactive platform that combines statistical modelling, scenario analysis and live match simulation to explore how the FIFA World Cup Final could unfold.
-
-### 1. Play the Final (Recommended)
-Start with **Play the Final** to experience an interactive version of the World Cup Final. Throughout the match you'll face major tactical moments where your decisions directly influence the game's outcome. Every choice updates the live probabilities and can ultimately decide who lifts the World Cup.
-
-### 2. View the Baseline Prediction
-Open the **Match Prediction** tab to explore the model's baseline forecast, including the projected winner, scoreline, expected goals (xG), win probabilities and other key statistical insights.
-
-### 3. Build Your Own Scenario
-Use the controls in the **left sidebar** to modify player fitness, match events and other pre-match conditions. Every adjustment instantly recalculates the model, allowing you to compare how different scenarios influence the prediction.
-
-### 4. Explore the Analysis
-Navigate through the tabs below to investigate different aspects of the model:
-
-- **Play the Final** – Play through an interactive version of the Final where your decisions shape the result.
-- **Match Prediction** – View the model's complete statistical prediction.
-- **Automatic Simulator** – Run a full AI simulation of the Final from kick-off to full-time.
-- **Player Probabilities** – Explore projected goals, assists and performance probabilities for key players.
-- **Match Events** – Analyse the likelihood of significant events occurring throughout the match.
-- **Methodology** – Learn about the data, assumptions and statistical techniques used to build the simulation engine.
-
-### Recommended Experience
-
-For the best experience, begin by playing the interactive Final. Afterwards, compare your result with the model's prediction, experiment with different scenarios using the sidebar, and observe how each change affects the projected outcome across every section of the platform.
-
----
-""")
 with st.container(border=True):
     st.subheader("Current scenario")
 
@@ -2884,12 +2855,7 @@ def resolve_playable_choice(choice_name):
     choice = moment["choices"][choice_name]
 
     success_probability = choice["success"]
-# Slightly increase success rates so the playable mode feels
-# more rewarding while keeping outcomes uncertain.
-success_probability = (
-    success_probability * 1.18
-    + 0.04
-)
+
     # Active What-Ifs affect the decision.
     if moment["team"] == "Argentina":
 
@@ -2920,8 +2886,8 @@ success_probability = (
             success_probability *= 0.75
 
     success_probability = max(
-        0.05,
-        min(0.82, success_probability)
+        0.03,
+        min(0.75, success_probability)
     )
 
     event_succeeds = (
